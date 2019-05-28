@@ -47,3 +47,19 @@ class FFReference(object):
             self._FanacRefs=[]
         print("append to FanacRefs for "+self.Name)
         self._FanacRefs.append(value)
+
+    # Add two FFRs together
+    def __add__(self, other):
+        if self.Name is None:
+            self.Name=other.Name
+            self.CanonName=other.CanonName
+
+            if self.FanacRefs is None:
+                self.FanacRefs=other.FanacRefs
+            elif other.FanacRefs is not None:
+                self.FanacRefs.extend(other.FanacRefs)
+
+            if self._FancyRefs is None:
+                self._FancyRefs=other._FancyRefs
+            elif other._FancyRefs is not None:
+                self._FancyRefs.extend(other._FancyRefs)

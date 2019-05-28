@@ -63,6 +63,24 @@ for line in fancyReferencesText:
     ffr.AppendFancyRef(line.strip())
 
 # Now combine multiple versions of the same name
+for name in references:
+    ffr=references[name]
+    if ffr.CanonName in redirectionTargets.keys():
+        # This canonical name is redirected elsewhere.
+        redirect=redirectionTargets[ffr.CanonName]
+        if redirect in references.keys():
+            targetFFR=references[redirect]
+            if targetFFR is not None:
+                targetFFR+=ffr
+            else:
+                targetFFR=ffr
+            references[name]=None
 
+# Now remove the enpty FFRs
+newrefs={}
+for k, v in references.items():
+    if v is not None:
+        newrefs[k]=v
+references=newrefs
 
 i=0
