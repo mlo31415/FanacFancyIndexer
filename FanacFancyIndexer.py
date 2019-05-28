@@ -43,4 +43,26 @@ for line in fanacReferencesText:
         references[parts[0]]=FFReference.FFReference(Name=parts[0])
     references[parts[0]].AppendFanacRef(parts[1])
 
+# Now read the Fancy data
+# It consists of a line starting "**" containing the referred-to name
+# Those are followed by one or more lines beginning "  " containg the canonical name of a referring page
+fanacDataPath=r"..\FancyNameExtractor"
+with open(os.path.join(fanacDataPath, "Referring pages.txt"), "r") as f:
+    fancyReferencesText=f.read().splitlines()
+
+ffr=None
+for line in fancyReferencesText:
+    if line.startswith("**"):
+        name=line[2:]
+        if name in references.keys():
+            ffr=references[name]
+        else:
+            ffr=FFReference.FFReference(Name=name)
+            references[name]=ffr
+        continue
+    ffr.AppendFancyRef(line.strip())
+
+# Now combine multiple versions of the same name
+
+
 i=0
