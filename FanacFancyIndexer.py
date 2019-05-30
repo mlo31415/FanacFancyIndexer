@@ -83,4 +83,26 @@ for k, v in references.items():
         newrefs[k]=v
 references=newrefs
 
+def sortkey(name):
+    name=name.split()
+    if len(name) == 1:
+        return name[0]
+
+    if len(name) == 2:
+        return name[1]+", "+name[0]
+
+    last=name[-1:][0].replace(" ","").replace(".", "").lower()
+    if last == "jr" or last == "sr" or last == "ii" or last == "iii":
+        return name[-2:-1][0]+" "+name[-1:][0]+" ".join(name[:-2])
+    return name[-1:][0]+" ".join(name[:-1])
+
+# Output in alpha order
+keys=list(references.keys())
+keys.sort(key=lambda x: sortkey(x))
+
+with open("References.txt", "w+") as f:
+    for key in keys:
+        ref=references[key]
+        f.write(ref.Name+"\n")
+
 i=0
