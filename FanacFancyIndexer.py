@@ -43,26 +43,33 @@ for line in fanacReferencesText:
         references[parts[0]]=FFReference.FFReference(Name=parts[0])
     references[parts[0]].AppendFanacRef(parts[1])
 
+print("Fanac yielded "+str(len(references))+" distinct names")
+
 # Now read the Fancy data
 # It consists of a line starting "**" containing the referred-to name
-# Those are followed by one or more lines beginning "  " containg the canonical name of a referring page
+# Those are followed by one or more lines beginning "  " containing the canonical name of a referring page
 fanacDataPath=r"..\FancyNameExtractor"
 with open(os.path.join(fanacDataPath, "Referring pages.txt"), "r") as f:
     fancyReferencesText=f.read().splitlines()
 
 ffr=None
+count=0
 for line in fancyReferencesText:
     if line.startswith("**"):
         name=line[2:]
         if name in references.keys():
             ffr=references[name]
+            count+=1
         else:
             ffr=FFReference.FFReference(Name=name)
             references[name]=ffr
         continue
     ffr.AppendFancyRef(line.strip())
+print("Fancy yielded "+str(count)+" distinct names")
+print("For a total of "+str(len(references)))
 
 # Now combine multiple versions of the same name
+# We can't delete the duplicate FFRs without messing up the iteration, so we justs ent their value to None and remove them afterwards
 for name in references:
     ffr=references[name]
     if ffr.CanonName in redirectionTargets.keys():
@@ -76,13 +83,23 @@ for name in references:
                 targetFFR=ffr
             references[name]=None
 
-# Now remove the enpty FFRs
+# Remove the enpty FFRs from the dictionary
 newrefs={}
 for k, v in references.items():
     if v is not None:
         newrefs[k]=v
 references=newrefs
 
+print("Combining synonyms brought it to "+str(len(references))+" distinct names")
+
+# Read in the list of people from fancy
+with open(os.path.join(fancyDataPath, "Peoples names.txt"), "rb") as f:
+    peoplePagesFancy=f.read().decode("cp437").splitlines()
+
+# Generate a name in alphabetizing order:
+# Rockefeller, John D.
+# Rockefeller, Jr, John D.
+# ATom
 def sortkey(name):
     name=name.split()
     if len(name) == 1:
@@ -96,13 +113,16 @@ def sortkey(name):
         return name[-2:-1][0]+" "+name[-1:][0]+" ".join(name[:-2])
     return name[-1:][0]+" ".join(name[:-1])
 
-# Output in alpha order
+# Sort the reference list into alpha order
 keys=list(references.keys())
 keys.sort(key=lambda x: sortkey(x))
 
 with open("References.txt", "w+") as f:
     for key in keys:
+        f.write(key+"\n")
         ref=references[key]
-        f.write(ref.Name+"\n")
+        if ref.Name in peoplePagesFancy:
+            f.write("    has Fancy page")
+        f.write("    Fancy="+str(ref.NumFancyRefs)+"   Fanac="+str(ref.NumFanacRefs)+"\n")
 
 i=0
