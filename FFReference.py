@@ -24,13 +24,11 @@ class FFReference(object):
 
     @FancyRefs.setter
     def FancyRefs(self, value):
-        print("setter of FancyRefs for "+self.Name+" called")
         self._FancyRefs = value
 
     def AppendFancyRef(self, value):
         if self._FancyRefs is None:
             self._FancyRefs=[]
-        print("append to FancyRefs for "+self.Name)
         self._FancyRefs.append(value)
 
     @property
@@ -39,13 +37,11 @@ class FFReference(object):
 
     @FanacRefs.setter
     def FanacRefs(self, value):
-        print("setter of FanacRefs for "+self.Name+" called")
         self._FanacRefs = value
 
     def AppendFanacRef(self, value):
         if self._FanacRefs is None:
             self._FanacRefs=[]
-        print("append to FanacRefs for "+self.Name)
         self._FanacRefs.append(value)
 
     # Add two FFRs together
