@@ -19,6 +19,18 @@ class FFReference(object):
         self._FanacRefs=FanacRefs
 
     @property
+    def NumFancyRefs(self):
+        if self.FancyRefs is None:
+            return 0
+        return len(self.FancyRefs)
+
+    @property
+    def NumFanacRefs(self):
+        if self.FanacRefs is None:
+            return 0
+        return len(self.FanacRefs)
+
+    @property
     def FancyRefs(self):
         return self._FancyRefs
 
