@@ -113,16 +113,34 @@ def sortkey(name):
         return name[-2:-1][0]+" "+name[-1:][0]+" ".join(name[:-2])
     return name[-1:][0]+" ".join(name[:-1])
 
-# Sort the reference list into alpha order
+# Sort the reference list into alpha order by name
 keys=list(references.keys())
 keys.sort(key=lambda x: sortkey(x))
+
+# Sort the Fancy and Fanac referring pages lists for each person
+for key, ref in references.items():
+    if ref.FancyRefs is not None and len(ref.FancyRefs) > 0:
+        ref.FancyRefs.sort()
+    if ref.FanacRefs is not None and len(ref.FanacRefs) > 0:
+        ref.FanacRefs.sort()
+
+def splitOutput(f, s: str):
+    strs=s.split(",")
+    while len(strs) > 0:
+        out=""
+        while (len(strs) > 0 and (len(out)+len(strs[0])) < 80 or (len(out) == 0 and len(strs[0]) >= 80)):
+            out=out+strs[0].strip()+", "
+            del strs[0]
+        f.write("    "+out+"\n")
 
 with open("References.txt", "w+") as f:
     for key in keys:
         f.write(key+"\n")
         ref=references[key]
         if ref.Name in peoplePagesFancy:
-            f.write("    has Fancy page")
-        f.write("    Fancy="+str(ref.NumFancyRefs)+"   Fanac="+str(ref.NumFanacRefs)+"\n")
-
+            f.write("    *["+ref.Name+"]*\n")
+        if ref.NumFancyRefs > 0:
+            splitOutput(f, "["+"], [".join(ref.FancyRefs)+"]")
+        if ref.NumFanacRefs > 0:
+            splitOutput(f, ", ".join((ref.FanacRefs)))
 i=0
