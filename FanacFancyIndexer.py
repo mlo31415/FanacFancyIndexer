@@ -1,6 +1,7 @@
 import os
 import os.path
 import FFReference
+import Helpers
 
 # Read the Fancy redirection data.  This will create a dictionar which allows us to turn variant names into standard forms.
 fancyDataPath=r"..\FancyNameExtractor"
@@ -83,7 +84,7 @@ for name in references:
                 targetFFR=ffr
             references[name]=None
 
-# Remove the enpty FFRs from the dictionary
+# That targeted dictionary entries for removal by setting the value to None. So remove them from the dictionary
 newrefs={}
 for k, v in references.items():
     if v is not None:
@@ -112,10 +113,6 @@ def sortkey(name):
     if last == "jr" or last == "sr" or last == "ii" or last == "iii":
         return name[-2:-1][0]+" "+name[-1:][0]+" ".join(name[:-2])
     return name[-1:][0]+" ".join(name[:-1])
-
-# Sort the reference list into alpha order by name
-keys=list(references.keys())
-keys.sort(key=lambda x: sortkey(x))
 
 # Sort the Fancy and Fanac referring pages lists for each person
 for key, ref in references.items():
@@ -157,23 +154,16 @@ for key, ref in references.items():
     ref.FanacRefs=refs
 
 
-def splitOutput(f, s: str):
-    strs=s.split(",")
-    while len(strs) > 0:
-        out=""
-        while (len(strs) > 0 and (len(out)+len(strs[0])) < 80 or (len(out) == 0 and len(strs[0]) >= 80)):
-            out=out+strs[0].strip()+", "
-            del strs[0]
-        f.write("    "+out+"\n")
-
+# Create a list of references keys in alpha order by name
+sortedReferenceKeys=list(references.keys()).sort(key=lambda x: sortkey(x))
 with open("References.txt", "w+") as f:
-    for key in keys:
+    for key in sortedReferenceKeys:
         f.write(key+"\n")
         ref=references[key]
         if ref.Name in peoplePagesFancy:
             f.write("    *["+ref.Name+"]*\n")
         if ref.NumFancyRefs > 0:
-            splitOutput(f, "["+"], [".join(ref.FancyRefs)+"]")
+            Helpers.splitOutput(f, "["+"], [".join(ref.FancyRefs)+"]")
         if ref.NumFanacRefs > 0:
-            splitOutput(f, ref.FanacRefsString)
+            Helpers.splitOutput(f, ref.FanacRefsString)
 i=0

@@ -56,7 +56,7 @@ class FanacIssue(object):
     # Format the FI for printing
     def Format(self):
         if self._Pathname is None or len(self._Pathname) == 0:
-            return "Attempt to format null FanacIssue"
+            return "FanacIssue.Format of None"
         if self._Issuelist == None or len(self._Issuelist) == 0:
             return self._Pathname
         temp=[i if i is not None else "None" for i in self._Issuelist]  #TODO: remove this when we're properly handling None issues

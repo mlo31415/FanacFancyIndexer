@@ -20,3 +20,15 @@ def CanonicizeString(name: str):
         if canName[:-1] == "-":
             canName=canName[:-1]
     return canName
+
+
+#------------------------------------------------------------------
+# Split a really long string of output for printing as text.
+def splitOutput(f, s: str):
+    strs=s.split(",")
+    while len(strs) > 0:
+        out=""
+        while (len(strs) > 0 and (len(out)+len(strs[0])) < 80 or (len(out) == 0 and len(strs[0]) >= 80)):
+            out=out+strs[0].strip()+", "
+            del strs[0]
+        f.write("    "+out+"\n")
