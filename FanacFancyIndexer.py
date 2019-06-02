@@ -48,8 +48,8 @@ print("Fanac yielded "+str(len(references))+" distinct names")
 # Now read the Fancy data
 # It consists of a line starting "**" containing the referred-to name
 # Those are followed by one or more lines beginning "  " containing the canonical name of a referring page
-fanacDataPath=r"..\FancyNameExtractor"
-with open(os.path.join(fanacDataPath, "Referring pages.txt"), "r") as f:
+fancyDataPath=r"..\FancyNameExtractor"
+with open(os.path.join(fancyDataPath, "Referring pages.txt"), "r") as f:
     fancyReferencesText=f.read().splitlines()
 
 ffr=None
@@ -122,7 +122,40 @@ for key, ref in references.items():
     if ref.FancyRefs is not None and len(ref.FancyRefs) > 0:
         ref.FancyRefs.sort()
     if ref.FanacRefs is not None and len(ref.FanacRefs) > 0:
-        ref.FanacRefs.sort()
+        ref.FanacRefs.sort(key=lambda x: x.SortName)
+
+# Merge references to different pages of the same issue in Fanac
+# The strategy is to take #1 and compare it with #2.  If those merge, try #3 into #1. When it eventually fails, go to the failure and try to merge the one after than into it.  Etc.
+for key, ref in references.items():
+    if ref.FanacRefs is None or len(ref.FanacRefs) == 0:
+        continue
+    refs=ref.FanacRefs
+    indexBase=0
+    indexMerge=1
+    while indexMerge < len(refs):
+        refBase=refs[indexBase]
+        if refBase is None:
+            indexBase+=1
+            indexMerge=indexBase+1
+            continue
+
+        refMerge=refs[indexMerge]
+        if refMerge is None:
+            indexMerge+=1
+            continue
+
+        if not refBase.Merge(refMerge):
+            indexBase=indexMerge
+            indexMerge=indexBase+1
+            continue
+
+        refs[indexMerge]=None
+        indexMerge+=1
+
+    # Get rid of any deleted refs
+    refs=[r for r in refs if r is not None]
+    ref.FanacRefs=refs
+
 
 def splitOutput(f, s: str):
     strs=s.split(",")
@@ -142,5 +175,5 @@ with open("References.txt", "w+") as f:
         if ref.NumFancyRefs > 0:
             splitOutput(f, "["+"], [".join(ref.FancyRefs)+"]")
         if ref.NumFanacRefs > 0:
-            splitOutput(f, ", ".join((ref.FanacRefs)))
+            splitOutput(f, ref.FanacRefsString)
 i=0

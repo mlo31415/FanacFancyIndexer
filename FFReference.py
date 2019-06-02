@@ -1,34 +1,43 @@
-import Helpers
-
 # A file to define the Reference class
+import Helpers
+import os
+import os.path
 from dataclasses import dataclass, field
+import FanacIssue
+from FanacIssue import FanacIssue
+
 
 @dataclass(order=False)
 class FFReference(object):
-    CanonName: str=None     # The Wikidot canonical name
-    Name: str=None          # The display name
-    _FancyRefs: list=None    # A list of canonical names of referring pages from Fancy
-    _FanacRefs: list=None    # A list of relative paths of referring Fanac files
+    CanonName: str     # The Wikidot canonical name
+    Name: str          # The display name
+    _FancyRefs: list    # A list of strings: canonical names of referring pages from Fancy
+    _FanacRefs: list    # A list of FanacIssue objects
 
-    def __init__(self, CanonName=None, Name=None, FancyRefs=None, FanacRefs=None):
+    def __init__(self, CanonName=None, Name=None, FanacStr=None):
         self.Name=Name
-        self.CanonName=CanonName
-        if Name is not None and CanonName is None:
-            self.CanonName=Helpers.CanonicizeString(Name)
-        self._FancyRefs=FancyRefs
-        self._FanacRefs=FanacRefs
+        self.CanonName=None
+        self._FancyRefs=None
+        self._FanacRefs=None
+
+        if CanonName is not None:
+            self.CanonName=CanonName
+
+        if Name is not None:
+            self.Name=Name
+            if CanonName is None:
+                self.CanonName=Helpers.CanonicizeString(Name)
+
+        if FanacStr is not None:
+            fi=FanacIssue()
+            fi.InitFromString(FanacStr)
+            self._FanacRefs=[fi]
 
     @property
     def NumFancyRefs(self):
         if self.FancyRefs is None:
             return 0
         return len(self.FancyRefs)
-
-    @property
-    def NumFanacRefs(self):
-        if self.FanacRefs is None:
-            return 0
-        return len(self.FanacRefs)
 
     @property
     def FancyRefs(self):
@@ -47,14 +56,42 @@ class FFReference(object):
     def FanacRefs(self):
         return self._FanacRefs
 
+    @property
+    def FanacRefsString(self):
+        out=""
+        for fi in self._FanacRefs:
+            if len(out) > 0:
+                out+=", "
+            out=out+fi.Format()
+        return out
+
     @FanacRefs.setter
     def FanacRefs(self, value):
-        self._FanacRefs = value
+        self._FanacRefs=value
 
+    @property
+    def NumFanacRefs(self):
+        if self.FanacRefs is None:
+            return 0
+        return len(self.FanacRefs)
+
+    # Append a Fanac reference.  This may be just a string or this may be convertible to a FanacIssue
     def AppendFanacRef(self, value):
-        if self._FanacRefs is None:
-            self._FanacRefs=[]
-        self._FanacRefs.append(value)
+        if self._FanacRefs is None or len(self._FanacRefs) == 0:
+            fi=FanacIssue()
+            fi.InitFromString(value)
+            self._FanacRefs=[fi]
+            return
+
+        # Can this me merged with the last FanacIssue?
+        lastFI=self._FanacRefs[-1:][0]
+        if lastFI.Append(value):
+            return
+
+        # Nope. Just append it to the list
+        fi=FanacIssue(Str=value)
+        self._FanacRefs.append(fi)
+
 
     # Add two FFRs together
     def __add__(self, other):
@@ -62,12 +99,29 @@ class FFReference(object):
             self.Name=other.Name
             self.CanonName=other.CanonName
 
-            if self.FanacRefs is None:
-                self.FanacRefs=other.FanacRefs
-            elif other.FanacRefs is not None:
-                self.FanacRefs.extend(other.FanacRefs)
+        if self._FanacRefs is None:
+            self._FanacRefs=other._FanacRefs
+        elif other._FanacRefs is not None:
+            self._FanacRefs.extend(other._FanacRefs)
 
+        if self._FancyRefs is None:
+            self._FancyRefs=other._FancyRefs
+        elif other._FancyRefs is not None:
+            self._FancyRefs.extend(other._FancyRefs)
+
+    def Merge(self, other):
+        if self.Name != other.name:
+            return False
+
+        if other._FancyRefs is not None:
             if self._FancyRefs is None:
                 self._FancyRefs=other._FancyRefs
-            elif other._FancyRefs is not None:
+            else:
                 self._FancyRefs.extend(other._FancyRefs)
+
+        if other._FanacRefs is not None:
+            if self._FanacRefs is None:
+                self._FanacRefs=other._FanacRefs
+            else:
+                self._FanacRefs.extend(other._FanacRefs)
+
