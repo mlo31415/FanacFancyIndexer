@@ -46,6 +46,15 @@ class FanacIssue(object):
     # Append a reference string to this class instance
     def Append(self, s: str):
         page, issue=IsFanacIssuePage(s)
+
+        # Is this a new, empty instance?
+        if self._Pathname == None and self._Issuelist == None:
+            self._Pathname=page
+            if issue is not None:
+                self._Issuelist=[issue]
+            return True
+
+        # OK, we're (maybe) appending to an existing instance
         if issue is None:
             self._Pathname=s
             return False
