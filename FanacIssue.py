@@ -64,9 +64,9 @@ class FanacIssue(object):
 
     # Format the FI for printing
     def Format(self):
-        if self._Pathname is None or len(self._Pathname) == 0:
+        if self._Pathname is None or len(self._Pathname) == 0:  # This is likely an error
             return "FanacIssue.Format of None"
-        if self._Issuelist == None or len(self._Issuelist) == 0:
+        if self._Issuelist == None or len(self._Issuelist) == 0:    # There's a filename, but no page number
             return self._Pathname
         temp=[i if i is not None else "None" for i in self._Issuelist]  #TODO: remove this when we're properly handling None issues
         return self._Pathname+" ("+",".join(temp)+")"
