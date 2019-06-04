@@ -53,11 +53,13 @@ fancyDataPath=r"..\FancyNameExtractor"
 with open(os.path.join(fancyDataPath, "Referring pages.txt"), "r") as f:
     fancyReferencesText=f.read().splitlines()
 
+canonNameToFull={}
 ffr=None
 count=0
 for line in fancyReferencesText:
     if line.startswith("**"):
         name=line[2:]
+        canonNameToFull[Helpers.CanonicizeString(name)]=name
         if name in references.keys():
             ffr=references[name]
             count+=1
@@ -121,14 +123,62 @@ for key, ref in references.items():
     if ref.FanacRefs is not None and len(ref.FanacRefs) > 0:
         ref.FanacRefs.sort(key=lambda x: x.SortName)
 
+#TODO: Sort out the duplication of this code
+def jacksNumbers(s: str):
+    s=s.lower()
+    if s == "cv" or s == "fc": return -10
+    if s == "ic" or s == "if" or s == "ifc": return -9
+    if s == "tc" or s == "con": return -3
+    if s == "cf": return 500
+    if s == "bc": return 900
+    if s == "er": return 550
+    if s == "ib" or s == "ibc": return 899
+    if s == "ins": return 600
+    if s == "r1": return -8
+    if s == "r2": return -7
+    if s == "r3": return -6
+    if s == "r4": return -5
+    if s == "r5": return -4
+    if s == "i1": return 601
+    if s == "i2": return 602
+    if s == "i3": return 603
+    if s == "i4": return 604
+    if s == "i5": return 605
+    try:
+        return int(s)
+    except:
+        pass
+    return None
+
+
+def numsSortKey(n: str):
+    if n is None or len(n) == 0:  # Put blank or missing at front.
+        return -99
+
+    val=jacksNumbers(n)
+    if val is not None:
+        return val
+    # Maybe it's a range. If so, return the start of the range
+    ns=n.split("-")
+    if len(ns) == 2:
+        val=jacksNumbers(ns[0])
+        if val is not None:
+            return val
+    return 999  # Uninterpretable. Put it at the end.
+
 # Merge references to different pages of the same issue in Fanac
 # The strategy is to take #1 and compare it with #2.  If those merge, try #3 into #1. When it eventually fails, go to the failure and try to merge the one after than into it.  Etc.
 for key, ref in references.items():
     if ref.FanacRefs is None or len(ref.FanacRefs) == 0:
         continue
+
+    for ffr in ref.FanacRefs:
+        if ffr.Issuelist is not None:
+            ffr._Issuelist.sort(key=lambda n: numsSortKey(n))
     refs=ref.FanacRefs
     indexBase=0
     indexMerge=1
+
     while indexMerge < len(refs):
         refBase=refs[indexBase]
         if refBase is None:
@@ -167,4 +217,33 @@ with open("References.txt", "w+") as f:
             Helpers.splitOutput(f, "["+"], [".join(ref.FancyRefs)+"]")
         if ref.NumFanacRefs > 0:
             Helpers.splitOutput(f, ref.FanacRefsString)
-i=0
+
+# Write out the index HTML files
+with open("Index header.txt", "rb") as f:   # Reading in binary and doing the funny decode is to handle special characters embedded in some sources.
+    header=f.read().decode("cp437")         # decode("cp437") is magic to handle funny foreign characters
+with open("Index footer.txt", "rb") as f:
+    footer=f.read().decode("cp437")
+with open("References.html", "wb+") as f:
+    f.write(header.encode('cp437'))
+    for key in sortedReferenceKeys:
+        ref=references[key]
+        f.write(('<font size="4"><a href=http://fancyclopedia.org/'+ref.CanonName+">"+ref.Name+"</a></font>\n").encode('utf-8'))
+        if ref.NumFancyRefs > 0:
+            f.write((r'<table border="0" width="100%" cellspacing="0"> <tr> <td width="3%">&nbsp;</td><td>').encode("utf-8"))
+            f.write(r'<p Class="small">Fancyclopedia: '.encode('utf-8'))
+            first=True
+            for fr in ref.FancyRefs:
+                fullname=fr
+                try:
+                    fullname=canonNameToFull[fr]
+                except:
+                    pass
+                f.write(((", " if not first else " ")+'<a href=http://fancyclopedia.org/'+fr+'>['+fullname+']</a>').encode('utf-8'))
+                first=False
+            f.write("</p></td></tr></table>".encode('utf-8'))
+
+        if False:
+            if ref.NumFanacRefs > 0:
+                Helpers.splitOutput(f, ref.FanacRefsString)
+    f.write(footer.encode('cp437'))
+    f.close()

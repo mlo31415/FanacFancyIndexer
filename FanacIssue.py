@@ -91,8 +91,10 @@ class FanacIssue(object):
             return True
 
         self._Issuelist.extend(other._Issuelist)
-        self._Issuelist.sort(key=lambda n: numsSortKey(n))
         return True
+
+    def DeDup(self):
+        self._Issuelist.sort(key=lambda n: numsSortKey(n))
 
 
 def jacksNumbers(s: str):
