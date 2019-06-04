@@ -17,7 +17,7 @@ redirectionTargets={}
 target=""
 for line in fancyRedirectsText:
     if len(line) <3:
-        continue    # Shoudln't happen, really.
+        continue    # Shouldn't happen, really.
     if line[:2] == "**":
         target=line[2:]
     elif line[:2] == "  ":
@@ -53,13 +53,11 @@ fancyDataPath=r"..\FancyNameExtractor"
 with open(os.path.join(fancyDataPath, "Referring pages.txt"), "r") as f:
     fancyReferencesText=f.read().splitlines()
 
-canonNameToFull={}
 ffr=None
 count=0
 for line in fancyReferencesText:
     if line.startswith("**"):
         name=line[2:]
-        canonNameToFull[Helpers.CanonicizeString(name)]=name
         if name in references.keys():
             ffr=references[name]
             count+=1
@@ -70,6 +68,15 @@ for line in fancyReferencesText:
     ffr.AppendFancyRef(line.strip())
 print("Fancy yielded "+str(count)+" distinct names")
 print("For a total of "+str(len(references)))
+
+# Create the canonical to real names dictionary
+canonNameToFull={}
+with open(os.path.join(fancyDataPath, "Canonical names to real names.txt"), "rb") as f:
+    canonToTitleText=f.read().decode("utf-8").splitlines()
+for line in canonToTitleText:
+    canon, title=line.split("-->")
+    canonNameToFull[canon]=title
+
 
 # Now combine multiple versions of the same name
 # We can't delete the duplicate FFRs without messing up the iteration, so we justs ent their value to None and remove them afterwards
