@@ -225,6 +225,9 @@ with open("References.txt", "w+") as f:
         if ref.NumFanacRefs > 0:
             Helpers.splitOutput(f, ref.FanacRefsString)
 
+def writeutf8(f, s: str):
+    f.write(s.encode("utf-8"))
+
 # Write out the index HTML files
 with open("Index header.txt", "rb") as f:   # Reading in binary and doing the funny decode is to handle special characters embedded in some sources.
     header=f.read().decode("cp437")         # decode("cp437") is magic to handle funny foreign characters
@@ -235,16 +238,16 @@ with open("References.html", "wb+") as f:
     for key in sortedReferenceKeys:
         ref=references[key]
         # First come the Fancyclopedia references
-        f.write(('<font size="4"><a href=http://fancyclopedia.org/'+ref.CanonName+">"+ref.Name+"</a></font>\n").encode('utf-8'))
+        writeutf8(f, '<font size="4"><a href=http://fancyclopedia.org/'+ref.CanonName+">"+ref.Name+"</a></font>\n")
         if ref.NumFancyRefs > 0:
-            f.write((r'<table border="0" width="100%" cellspacing="0"> <tr> <td width="3%">&nbsp;</td><td>').encode("utf-8"))
-            f.write(r'<p Class="small">Fancyclopedia: '.encode('utf-8'))
+            writeutf8(f, r'<table border="0" width="100%" cellspacing="0"> <tr> <td width="3%">&nbsp;</td><td>')
+            writeutf8(f, r'<p Class="small">Fancyclopedia: ')
             joiner=""
             for fr in ref.FancyRefs:
                 fullname=fr
                 if fr in canonNameToFull.keys():
                     fullname=canonNameToFull[fr]
-                f.write((joiner+'<a href=http://fancyclopedia.org/'+fr+'>['+fullname+']</a>').encode('utf-8'))
+                writeutf8(f, joiner+'<a href=http://fancyclopedia.org/'+fr+'>['+fullname+']</a>')
                 joiner=", "
             f.write("</p></td></tr></table>".encode('utf-8'))
         # Next the Fanac references sorted by type
@@ -257,15 +260,15 @@ with open("References.html", "wb+") as f:
                         counts[type]=0
                     counts[type]+=1
             for countType in counts.keys():
-                f.write((r'<table border="0" width="100%" cellspacing="0"> <tr> <td width="3%">&nbsp;</td><td>').encode("utf-8"))
-                f.write((r'<p Class="small">'+countType+r': ').encode('utf-8'))
+                writeutf8(f, r'<table border="0" width="100%" cellspacing="0"> <tr> <td width="3%">&nbsp;</td><td>')
+                writeutf8(f, r'<p Class="small">'+countType+r': ')
                 joiner=""
                 for fi in ref.FanacRefs:
                     if fi.Issuelist is not None:
                         if countType == Helpers.fanacCategory(fi.Pathname):
-                            f.write((joiner+fi.Format()).encode('utf-8'))
+                            writeutf8(f, joiner+fi.Format())
                         joiner=", "
-                f.write("</p></td></tr>".encode('utf-8'))
-        f.write("</table>".encode('utf-8'))
-    f.write(footer.encode('cp437'))
+                writeutf8(f, "</p></td></tr>")
+        writeutf8(f, "</table>")
+    writeutf8(f, footer)
     f.close()
