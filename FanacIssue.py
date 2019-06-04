@@ -8,12 +8,13 @@ from dataclasses import dataclass, field
 @dataclass(order=False)
 class FanacIssue(object):
     _Pathname: str=None     # Full path and filename (relative to public) of the first issue in the list
-    _Issuelist: list=None   # List of strings making up the pagelist
+    _PageList: list=None    # List of strings making up the pagelist
+    _DisplayName: str=None  # The visible name to be used for this issue
 
     def __init__(self, Pathname=None, Issuelist=None, Str=None):
         if Str == None:
             self._Pathname=Pathname
-            self._Issuelist=Issuelist
+            self._PageList=Issuelist
         else:
             self.Append(Str)
 
@@ -23,15 +24,15 @@ class FanacIssue(object):
         return self._Pathname < second
 
     def InitFromString(self, s: str):
-        page, issue=IsFanacIssuePage(s)
-        if issue is None:
-            page=s
-        self._Pathname=page
-        self._Issuelist=[issue]
+        name, page=IsFanacIssuePage(s)
+        if name is None:
+            name=s
+        self._Pathname=name
+        self._PageList=[page]
 
     @property
-    def Issuelist(self):
-        return self._Issuelist
+    def PageList(self):
+        return self._PageList
 
     @property
     def Pathname(self):
@@ -45,30 +46,30 @@ class FanacIssue(object):
 
     # Append a reference string to this class instance
     def Append(self, s: str):
-        page, issue=IsFanacIssuePage(s)
+        name, page=IsFanacIssuePage(s)
 
         # Is this a new, empty instance?
-        if self._Pathname == None and self._Issuelist == None:
-            self._Pathname=page
-            if issue is not None:
-                self._Issuelist=[issue]
+        if self._Pathname == None and self._PageList == None:
+            self._Pathname=name
+            if page is not None:
+                self._PageList=[page]
             return True
 
         # OK, we're (maybe) appending to an existing instance
-        if issue is None:
+        if page is None:
             self._Pathname=s
             return False
-        if page != self._Pathname:
+        if name != self._Pathname:
             return False
-        self._Issuelist.append(issue)
+        self._PageList.append(page)
 
     # Format the FI for printing
     def Format(self):
         if self._Pathname is None or len(self._Pathname) == 0:  # This is likely an error
             return "FanacIssue.Format of None"
-        if self._Issuelist == None or len(self._Issuelist) == 0:    # There's a filename, but no page number
+        if self._PageList == None or len(self._PageList) == 0:    # There's a filename, but no page number
             return self._Pathname
-        temp=[i if i is not None else "None" for i in self._Issuelist]  #TODO: remove this when we're properly handling None issues
+        temp=[i if i is not None else "None" for i in self._PageList]  #TODO: remove this when we're properly handling None issues
         return self._Pathname+" ("+",".join(temp)+")"
 
 
@@ -83,18 +84,18 @@ class FanacIssue(object):
         if self._Pathname != other._Pathname:
             return False
 
-        if other._Issuelist is None:
+        if other._PageList is None:
             return True
 
-        if self._Issuelist is None:
-            self._Issuelist=other._Issuelist
+        if self._PageList is None:
+            self._PageList=other._PageList
             return True
 
-        self._Issuelist.extend(other._Issuelist)
+        self._PageList.extend(other._PageList)
         return True
 
     def DeDup(self):
-        self._Issuelist.sort(key=lambda n: numsSortKey(n))
+        self._PageList.sort(key=lambda n: numsSortKey(n))
 
 
 def jacksNumbers(s: str):

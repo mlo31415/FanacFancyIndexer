@@ -180,8 +180,8 @@ for key, ref in references.items():
         continue
 
     for ffr in ref.FanacRefs:
-        if ffr.Issuelist is not None:
-            ffr._Issuelist.sort(key=lambda n: numsSortKey(n))
+        if ffr.PageList is not None:
+            ffr.PageList.sort(key=lambda n: numsSortKey(n))
     refs=ref.FanacRefs
     indexBase=0
     indexMerge=1
@@ -254,7 +254,7 @@ with open("References.html", "wb+") as f:
         if ref.FanacRefs is not None:
             counts={}
             for fi in ref.FanacRefs:
-                if fi.Issuelist is not None:
+                if fi.PageList is not None:
                     type=Helpers.fanacCategory(fi.Pathname)
                     if type not in counts.keys():
                         counts[type]=0
@@ -264,7 +264,7 @@ with open("References.html", "wb+") as f:
                 writeutf8(f, r'<p Class="small">'+countType+r': ')
                 joiner=""
                 for fi in ref.FanacRefs:
-                    if fi.Issuelist is not None:
+                    if fi.PageList is not None:
                         if countType == Helpers.fanacCategory(fi.Pathname):
                             writeutf8(f, joiner+fi.Format())
                         joiner=", "
