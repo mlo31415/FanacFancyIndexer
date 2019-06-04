@@ -32,3 +32,29 @@ def splitOutput(f, s: str):
             out=out+strs[0].strip()+", "
             del strs[0]
         f.write("    "+out+"\n")
+
+
+
+#------------------------------------------------------------------
+# Decode the Fanac path relative to /public/ to determine what category this reference is
+def fanacCategory(s: str):
+    if s.find("Fan_Photo_Album") > -1:
+        return "Photo"
+    if s.startswith(r"\fanzines"):
+        return "Fanzine"
+    if s.startswith(r"\fan_funds"):
+        return "Fanzine"
+    if s.startswith(r"\Fan_Histories"):
+        return "Fanzine"
+    if s.startswith(r"\Fannish_Reference_Works"):
+        return "Fanzine"
+    if s.find("Photo") > -1:
+        return "Photo"
+
+    return "Unknown"
+
+
+#------------------------------------------------------------------
+# Given the Fanac path relative to /public/, determine a good display title
+def fanacDisplayName(s: str):
+    return s

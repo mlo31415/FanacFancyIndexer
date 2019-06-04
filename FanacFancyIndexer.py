@@ -227,23 +227,38 @@ with open("References.html", "wb+") as f:
     f.write(header.encode('cp437'))
     for key in sortedReferenceKeys:
         ref=references[key]
+        # First come the Fancyclopedia references
         f.write(('<font size="4"><a href=http://fancyclopedia.org/'+ref.CanonName+">"+ref.Name+"</a></font>\n").encode('utf-8'))
         if ref.NumFancyRefs > 0:
             f.write((r'<table border="0" width="100%" cellspacing="0"> <tr> <td width="3%">&nbsp;</td><td>').encode("utf-8"))
             f.write(r'<p Class="small">Fancyclopedia: '.encode('utf-8'))
-            first=True
+            joiner=""
             for fr in ref.FancyRefs:
                 fullname=fr
-                try:
+                if fr in canonNameToFull.keys():
                     fullname=canonNameToFull[fr]
-                except:
-                    pass
-                f.write(((", " if not first else " ")+'<a href=http://fancyclopedia.org/'+fr+'>['+fullname+']</a>').encode('utf-8'))
-                first=False
+                f.write((joiner+'<a href=http://fancyclopedia.org/'+fr+'>['+fullname+']</a>').encode('utf-8'))
+                joiner=", "
             f.write("</p></td></tr></table>".encode('utf-8'))
-
-        if False:
-            if ref.NumFanacRefs > 0:
-                Helpers.splitOutput(f, ref.FanacRefsString)
+        # Next the Fanac references sorted by type
+        if ref.FanacRefs is not None:
+            counts={}
+            for fi in ref.FanacRefs:
+                if fi.Issuelist is not None:
+                    type=Helpers.fanacCategory(fi.Pathname)
+                    if type not in counts.keys():
+                        counts[type]=0
+                    counts[type]+=1
+            for countType in counts.keys():
+                f.write((r'<table border="0" width="100%" cellspacing="0"> <tr> <td width="3%">&nbsp;</td><td>').encode("utf-8"))
+                f.write((r'<p Class="small">'+countType+r': ').encode('utf-8'))
+                joiner=""
+                for fi in ref.FanacRefs:
+                    if fi.Issuelist is not None:
+                        if countType == Helpers.fanacCategory(fi.Pathname):
+                            f.write((joiner+fi.Format()).encode('utf-8'))
+                        joiner=", "
+                f.write("</p></td></tr>".encode('utf-8'))
+        f.write("</table>".encode('utf-8'))
     f.write(footer.encode('cp437'))
     f.close()
