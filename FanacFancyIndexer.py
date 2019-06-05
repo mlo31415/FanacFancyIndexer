@@ -207,8 +207,7 @@ for key, ref in references.items():
         indexMerge+=1
 
     # Get rid of any deleted refs
-    refs=[r for r in refs if r is not None]
-    ref.FanacRefs=refs
+    ref.FanacRefs=[r for r in refs if r is not None]
 
 
 # Create a list of references keys in alpha order by name
