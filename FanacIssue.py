@@ -69,8 +69,8 @@ class FanacIssue(object):
             return "FanacIssue.Format of None"
         if self._PageList == None or len(self._PageList) == 0:    # There's a filename, but no page number
             return self._Pathname
-        temp=[i if i is not None else "None" for i in self._PageList]  #TODO: remove this when we're properly handling None issues
-        return self._Pathname+" ("+",".join(temp)+")"
+        self.DeDup()
+        return self._Pathname+" ("+",".join(self._PageList)+")"
 
 
     # Merge two fanac page references
@@ -94,8 +94,17 @@ class FanacIssue(object):
         self._PageList.extend(other._PageList)
         return True
 
+    # Remove duplicate entries from the pagelist
     def DeDup(self):
+        if self._PageList is None or len(self._PageList) == 0:
+            return
         self._PageList.sort(key=lambda n: numsSortKey(n))
+        i=0
+        while i < len(self._PageList)-1:
+            if self._PageList[i] == self._PageList[i+1]:
+                self._PageList[i]=None
+            i=i+1
+        self._PageList=[p for p in self._PageList if p is not None]
 
 
 def jacksNumbers(s: str):
