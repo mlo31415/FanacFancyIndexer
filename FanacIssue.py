@@ -1,4 +1,4 @@
-# A file to define the Reference class
+# A class to define the a list of pages in an issue of a publication
 import Helpers
 import os
 import os.path
