@@ -151,7 +151,7 @@ for key, ref in references.items():
 # Rockefeller, John D.
 # Rockefeller, Jr, John D.
 # ATom
-def sortkey(name):
+def sortkeyForNames(name):
     name=name.split()
     if len(name) == 1:
         return name[0]
@@ -166,7 +166,7 @@ def sortkey(name):
 
 # Create a list of references keys in alpha order by name
 sortedReferenceKeys=list(references.keys())
-sortedReferenceKeys.sort(key=lambda x: sortkey(x))
+sortedReferenceKeys.sort(key=lambda x: sortkeyForNames(x))
 with open("References.txt", "w+") as f:
     for key in sortedReferenceKeys:
         f.write(key+"\n")
