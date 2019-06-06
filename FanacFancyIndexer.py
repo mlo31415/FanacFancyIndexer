@@ -106,72 +106,10 @@ print("Combining synonyms brought it to "+str(len(references))+" distinct names"
 with open(os.path.join(fancyDataPath, "Peoples names.txt"), "rb") as f:
     peoplePagesFancy=f.read().decode("cp437").splitlines()
 
-# Generate a name in alphabetizing order:
-# Rockefeller, John D.
-# Rockefeller, Jr, John D.
-# ATom
-def sortkey(name):
-    name=name.split()
-    if len(name) == 1:
-        return name[0]
-
-    if len(name) == 2:
-        return name[1]+", "+name[0]
-
-    last=name[-1:][0].replace(" ","").replace(".", "").lower()
-    if last == "jr" or last == "sr" or last == "ii" or last == "iii":
-        return name[-2:-1][0]+" "+name[-1:][0]+" ".join(name[:-2])
-    return name[-1:][0]+" ".join(name[:-1])
-
 # Sort the Fancy and Fanac referring pages lists for each person
 for key, ref in references.items():
-    if ref.FancyRefs is not None and len(ref.FancyRefs) > 0:
-        ref.FancyRefs.sort()
-    if ref.FanacRefs is not None and len(ref.FanacRefs) > 0:
-        ref.FanacRefs.sort(key=lambda x: x.SortName)
-
-#TODO: Sort out the duplication of this code
-def jacksNumbers(s: str):
-    s=s.lower()
-    if s == "cv" or s == "fc": return -10
-    if s == "ic" or s == "if" or s == "ifc": return -9
-    if s == "tc" or s == "con": return -3
-    if s == "cf": return 500
-    if s == "bc": return 900
-    if s == "er": return 550
-    if s == "ib" or s == "ibc": return 899
-    if s == "ins": return 600
-    if s == "r1": return -8
-    if s == "r2": return -7
-    if s == "r3": return -6
-    if s == "r4": return -5
-    if s == "r5": return -4
-    if s == "i1": return 601
-    if s == "i2": return 602
-    if s == "i3": return 603
-    if s == "i4": return 604
-    if s == "i5": return 605
-    try:
-        return int(s)
-    except:
-        pass
-    return None
-
-
-def numsSortKey(n: str):
-    if n is None or len(n) == 0:  # Put blank or missing at front.
-        return -99
-
-    val=jacksNumbers(n)
-    if val is not None:
-        return val
-    # Maybe it's a range. If so, return the start of the range
-    ns=n.split("-")
-    if len(ns) == 2:
-        val=jacksNumbers(ns[0])
-        if val is not None:
-            return val
-    return 999  # Uninterpretable. Put it at the end.
+    ref.SortFanacRefs()
+    ref.SortFancyRefs()
 
 # Merge references to different pages of the same issue in Fanac
 # The strategy is to take #1 and compare it with #2.  If those merge, try #3 into #1. When it eventually fails, go to the failure and try to merge the one after than into it.  Etc.
@@ -180,8 +118,7 @@ for key, ref in references.items():
         continue
 
     for ffr in ref.FanacRefs:
-        if ffr.PageList is not None:
-            ffr.PageList.sort(key=lambda n: numsSortKey(n))
+        ffr.SortPagelist()
     refs=ref.FanacRefs
     indexBase=0
     indexMerge=1
@@ -210,6 +147,23 @@ for key, ref in references.items():
     ref.FanacRefs=[r for r in refs if r is not None]
 
 
+# Generate a name in alphabetizing order:
+# Rockefeller, John D.
+# Rockefeller, Jr, John D.
+# ATom
+def sortkey(name):
+    name=name.split()
+    if len(name) == 1:
+        return name[0]
+
+    if len(name) == 2:
+        return name[1]+", "+name[0]
+
+    last=name[-1:][0].replace(" ", "").replace(".", "").lower()
+    if last == "jr" or last == "sr" or last == "ii" or last == "iii":
+        return name[-2:-1][0]+" "+name[-1:][0]+" ".join(name[:-2])
+    return name[-1:][0]+" ".join(name[:-1])
+
 # Create a list of references keys in alpha order by name
 sortedReferenceKeys=list(references.keys())
 sortedReferenceKeys.sort(key=lambda x: sortkey(x))
@@ -237,7 +191,7 @@ with open("References.html", "wb+") as f:
     for key in sortedReferenceKeys:
         ref=references[key]
         # First come the Fancyclopedia references
-        writeutf8(f, '<font size="4"><a href=http://fancyclopedia.org/'+ref.CanonName+">"+ref.Name+"</a></font>\n")
+        writeutf8(f, '<font size="5"><a href=http://fancyclopedia.org/'+ref.CanonName+">"+ref.Name+"</a></font>\n")
         if ref.NumFancyRefs > 0:
             writeutf8(f, r'<table border="0" width="100%" cellspacing="0"> <tr> <td width="3%">&nbsp;</td><td>')
             writeutf8(f, r'<p Class="small">Fancyclopedia: ')
@@ -246,7 +200,7 @@ with open("References.html", "wb+") as f:
                 fullname=fr
                 if fr in canonNameToFull.keys():
                     fullname=canonNameToFull[fr]
-                writeutf8(f, joiner+'<a href=http://fancyclopedia.org/'+fr+'>['+fullname+']</a>')
+                writeutf8(f, joiner+'<font size="4"><a href=http://fancyclopedia.org/'+fr+'>['+fullname+']</a></font>')
                 joiner=", "
             f.write("</p></td></tr></table>".encode('utf-8'))
         # Next the Fanac references sorted by type

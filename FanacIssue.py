@@ -44,6 +44,8 @@ class FanacIssue(object):
             return self._Pathname
         return " "
 
+
+    #******************************
     # Append a reference string to this class instance
     def Append(self, s: str):
         name, page=IsFanacIssuePage(s)
@@ -63,6 +65,8 @@ class FanacIssue(object):
             return False
         self._PageList.append(page)
 
+
+    #******************************
     # Format the FI for printing
     def Format(self):
         if self._Pathname is None or len(self._Pathname) == 0:  # This is likely an error
@@ -73,6 +77,7 @@ class FanacIssue(object):
         return self._Pathname+" ("+",".join(self._PageList)+")"
 
 
+    #******************************
     # Merge two fanac page references
     # They can be merged if they are both of the form:
     #   <path><name>-##.html
@@ -94,11 +99,13 @@ class FanacIssue(object):
         self._PageList.extend(other._PageList)
         return True
 
+
+    #******************************
     # Remove duplicate entries from the pagelist
     def DeDup(self):
         if self._PageList is None or len(self._PageList) == 0:
             return
-        self._PageList.sort(key=lambda n: numsSortKey(n))
+        self.SortPagelist()
         i=0
         while i < len(self._PageList)-1:
             if self._PageList[i] == self._PageList[i+1]:
@@ -107,6 +114,14 @@ class FanacIssue(object):
         self._PageList=[p for p in self._PageList if p is not None]
 
 
+    #******************************
+    # Sort a pagelist
+    def SortPagelist(self):
+        if self._PageList is not None:
+            self._PageList.sort(key=lambda n: numsSortKey(n))
+
+
+#******************************************************************
 def jacksNumbers(s: str):
     s=s.lower()
     if s == "cv" or s == "fc": return -10
@@ -134,6 +149,7 @@ def jacksNumbers(s: str):
     return None
 
 
+#******************************************************************
 def numsSortKey(n: str):
     if n is None or len(n) == 0:  # Put blank or missing at front.
         return -99
@@ -150,6 +166,7 @@ def numsSortKey(n: str):
     return 999  # Uninterpretable. Put it at the end.
 
 
+#******************************************************************
 # Is this string a properly formatted Fanac issue page relative path?
 # If so, return the issue spec and the page spec as separate string
 # If not, return None, None

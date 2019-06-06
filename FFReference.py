@@ -75,6 +75,7 @@ class FFReference(object):
             return 0
         return len(self.FanacRefs)
 
+    #**********************
     # Append a Fanac reference.  This may be just a string or this may be convertible to a FanacIssue
     def AppendFanacRef(self, value):
         if self._FanacRefs is None or len(self._FanacRefs) == 0:
@@ -93,6 +94,7 @@ class FFReference(object):
         self._FanacRefs.append(fi)
 
 
+    #**********************
     # Add two FFRs together
     def __add__(self, other):
         if self.Name is None:
@@ -109,6 +111,7 @@ class FFReference(object):
         elif other._FancyRefs is not None:
             self._FancyRefs.extend(other._FancyRefs)
 
+    #**********************
     def Merge(self, other):
         if self.Name != other.name:
             return False
@@ -125,3 +128,13 @@ class FFReference(object):
             else:
                 self._FanacRefs.extend(other._FanacRefs)
 
+
+    #**********************
+    def SortFancyRefs(self):
+        if self._FancyRefs is not None and len(self._FancyRefs) > 0:
+            self._FancyRefs.sort()
+
+    #**********************
+    def SortFanacRefs(self):
+        if self._FanacRefs is not None and len(self._FanacRefs) > 0:
+            self._FanacRefs.sort(key=lambda x: x.SortName)
