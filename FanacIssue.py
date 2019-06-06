@@ -68,14 +68,23 @@ class FanacIssue(object):
 
     #******************************
     # Format the FI for printing
-    def Format(self):
-        if self._Pathname is None or len(self._Pathname) == 0:  # This is likely an error
+    def Format(self, Displayname=None):
+        issueName=self._Pathname
+        if Displayname is not None:
+            issueName=Displayname
+        if issueName is None or len(issueName) == 0:  # This is likely an error
             return "FanacIssue.Format of None"
-        if self._PageList == None or len(self._PageList) == 0:    # There's a filename, but no page number
-            return self._Pathname
-        self.DeDup()
-        return self._Pathname+" ("+",".join(self._PageList)+")"
 
+        if self._PageList == None or len(self._PageList) == 0:    # There's a filename, but no page number
+            return issueName
+        self.DeDup()
+        pages=[p.lstrip("0") for p in self._PageList]
+        pages=[p if p != "" else "0" for p in pages]
+        if len(pages) > 1:
+            return issueName+" pp "+",".join(pages)
+        elif len(pages) == 1:
+            return issueName+" p"+pages[0]
+        return issueName
 
     #******************************
     # Merge two fanac page references

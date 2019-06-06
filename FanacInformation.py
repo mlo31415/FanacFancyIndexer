@@ -16,3 +16,14 @@ class FanacInformation(object):
     def Displayname(self):
         return self._Displayname
 
+
+# Look up a path and return whatever Fanac information we have on it.
+def findFanacInformation(fanacInfo: dict, path: str):
+    if path is not None:
+        if path in fanacInfo.keys():
+            return fanacInfo[path]
+        path=os.path.split(path)[0]
+        if path in fanacInfo.keys():
+            return fanacInfo[path]
+
+    return FanacInformation()

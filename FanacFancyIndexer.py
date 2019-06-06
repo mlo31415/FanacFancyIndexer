@@ -154,7 +154,7 @@ with open(os.path.join(fanacDataPath, "Fanac information.txt"), "rb") as f:
 fanacInformation={}
 for line in fanacInformationText:
     line=[li.strip() for li in line.split("|")]
-    fanacInformation[line[0]]=FanacInformation.FanacInformation(Displayname=line[1])
+    fanacInformation[line[0]]=FanacInformation.FanacInformation(Displayname=line[2])
 
 
 # Generate a name in alphabetizing order:
@@ -227,9 +227,10 @@ with open("References.html", "wb+") as f:
                 writeutf8(f, r'<p Class="small">'+countType+r': ')
                 joiner=""
                 for fi in ref.FanacRefs:
+                    displayname=FanacInformation.findFanacInformation(fanacInformation, fi.Pathname).Displayname
                     if fi.PageList is not None:
                         if countType == Helpers.fanacCategory(fi.Pathname):
-                            writeutf8(f, joiner+fi.Format())
+                            writeutf8(f, joiner+fi.Format(displayname))
                         joiner=", "
                 writeutf8(f, "</p></td></tr>")
         writeutf8(f, "</table>")
