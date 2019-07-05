@@ -153,26 +153,66 @@ with open(os.path.join(fanacDataPath, "Fanac information.txt"), "rb") as f:
 
 fanacInformation={}
 for line in fanacInformationText:
-    line=[li.strip() for li in line.split("|")]
-    fanacInformation[line[0]]=FanacInformation.FanacInformation(Displayname=line[2])
-
+    if len(line) > 0 and line[0] != "#":    # Ignore blank lines and lines beginning with "#"
+        line=[li.strip() for li in line.split("|")]
+        fanacInformation[line[0]]=FanacInformation.FanacInformation(Displayname=line[2])
 
 # Generate a name in alphabetizing order:
 # Rockefeller, John D.
 # Rockefeller, Jr, John D.
 # ATom
+# There will sometimes be a disambiguator in parentheses after the name.  It stays at the end: Walsh, Michael (CA)
 def sortkeyForNames(name):
     name=name.split()
     if len(name) == 1:
         return name[0]
 
+    # If the name is just two parts, it's assumed to be Fname Lname and we return Lname, Fname
     if len(name) == 2:
         return name[1]+", "+name[0]
 
+    # OK, now we need to break the name down.
+    # Is the last token parenthesized?
+    paren=""
     last=name[-1:][0].replace(" ", "").replace(".", "").lower()
-    if last == "jr" or last == "sr" or last == "ii" or last == "iii":
-        return name[-2:-1][0]+" "+name[-1:][0]+" ".join(name[:-2])
-    return name[-1:][0]+" ".join(name[:-1])
+    if last[0] == "(":
+        paren=last
+        name=name[:-1]  # Drop it and continue processing
+
+    suffix=""
+    last=name[-1:][0]
+    if last.replace(" ", "").replace(".", "").lower() in ["jr", "jr", "sr", "sr", "ii", "iii", "iv", "phd"]:
+        suffix=last
+        name=name[:-1]  # Drop it and continue processing
+
+    # Ok, what's left should just be the name
+    # Now look for a name preix like "de" or "von"
+    lname=name[-1:][0]
+    name=name[:-1]
+    prefix=""
+    last=name[-1:][0]
+    if len(name) > 1 and last.replace(" ", "").replace(".", "").lower() in ["de", "del", "von", "van", "vander"]:
+        prefix=last
+    if len(name) > 2 and last.replace(" ", "").replace(".", "").lower() in ["der"]:     # Handle van der Putte
+        prefix=last
+        last=name[-1:][0]
+        name=name[:-1]
+        if last.replace(" ", "").replace(".", "").lower() in ["van"]:
+            prefix=last+" "+prefix
+            name=name[:-1]
+
+    # Now assemble it all
+    last=lname
+    if len(prefix) > 0:
+        last=prefix+" "+last
+    if len(suffix) > 0:
+        last=last+" "+suffix
+    out=last+", "+" ".join(name)
+    if len(paren) > 0:
+        out=out+" "+paren
+
+    return out
+
 
 # Create a list of references keys in alpha order by name
 sortedReferenceKeys=list(references.keys())
@@ -204,7 +244,7 @@ with open("References.html", "wb+") as f:
         writeutf8(f, '<font size="5"><a href=http://fancyclopedia.org/'+ref.CanonName+">"+ref.Name+"</a></font>\n")
         if ref.NumFancyRefs > 0:
             writeutf8(f, r'<table border="0" width="100%" cellspacing="0"> <tr> <td width="3%">&nbsp;</td><td>')
-            writeutf8(f, r'<p Class="small">Fancyclopedia: ')
+            writeutf8(f, r'<p class="small">Fancyclopedia: ')
             joiner=""
             for fr in ref.FancyRefs:
                 fullname=fr
