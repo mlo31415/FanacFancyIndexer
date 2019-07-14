@@ -2,6 +2,7 @@ import os
 import os.path
 import FFReference
 import FanacInformation
+import FanacIssuePages
 import Helpers
 
 # Read the Fancy redirection data.  This will create a dictionar which allows us to turn variant names into standard forms.
@@ -32,18 +33,25 @@ references={}   # This will be a dictionary indexed by display name with the val
 # Read the Fanac data
 # In consists of lines of text containing a name separted by a "|" from a path relative to public to the file the reference comes from.
 fanacDataPath=r"..\FanacNameExtractor"
-with open(os.path.join(fanacDataPath, "Fanac name path pairs.txt"), "r") as f:
+with open(os.path.join(fanacDataPath, "Fanac name references.txt"), "r") as f:
     fanacReferencesText=f.read().splitlines()
 
-# Create a dictionary of names with the value being a FFReference
+# Create a dictionary of names with the value being a FFReference (a class which holds all fanac and fancy references for a given name
 for line in fanacReferencesText:
+    if len(line) == 0 or line[0] == "#":    # Skip comment and empty lines
+        continue
     parts=line.split("|")
-    parts=[p.strip() for p in parts]    # Split into name + reference
+    parts=[p.strip() for p in parts]    # Split into <person's name> | <file name> | <path relative to public>
+
+    # Get the existing FFReference for this name.  If there is none, add an empty one.
     try:
         ref=references[parts[0]]
     except:
         references[parts[0]]=FFReference.FFReference(Name=parts[0])
-    references[parts[0]].AppendFanacRef(parts[1])
+
+    # Add this fanac reference to the list of fanac references maintained by FFReference
+    fi=FanacIssuePages.FanacIssuePages(PageName=parts[1], Path=parts[2])
+    references[parts[0]].AppendFanacRef(fi)
 
 print("Fanac yielded "+str(len(references))+" distinct names")
 
@@ -258,7 +266,7 @@ with open("References.html", "wb+") as f:
             counts={}
             for fi in ref.FanacRefs:
                 if fi.PageList is not None:
-                    type=Helpers.fanacCategory(fi.Pathname)
+                    type=Helpers.fanacCategory(fi.Path)
                     if type not in counts.keys():
                         counts[type]=0
                     counts[type]+=1
@@ -267,9 +275,9 @@ with open("References.html", "wb+") as f:
                 writeutf8(f, r'<p Class="small">'+countType+r': ')
                 joiner=""
                 for fi in ref.FanacRefs:
-                    displayname=FanacInformation.findFanacInformation(fanacInformation, fi.Pathname).Displayname
+                    displayname=FanacInformation.findFanacInformation(fanacInformation, fi.Path).Displayname
                     if fi.PageList is not None:
-                        if countType == Helpers.fanacCategory(fi.Pathname):
+                        if countType == Helpers.fanacCategory(fi.Path):
                             writeutf8(f, joiner+fi.Format(displayname))
                         joiner=", "
                 writeutf8(f, "</p></td></tr>")

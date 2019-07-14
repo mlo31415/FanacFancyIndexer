@@ -1,4 +1,4 @@
-# A class to define the a list of pages in an issue of a publication
+# A class to define the a list of pages in a single issue of a publication
 import Helpers
 import os
 import os.path
@@ -6,43 +6,56 @@ from dataclasses import dataclass, field
 
 
 @dataclass(order=False)
-class FanacIssue(object):
-    _Pathname: str=None     # Full path and filename (relative to public) of the first issue in the list
-    _PageList: list=None    # List of strings making up the pagelist
-    _DisplayName: str=None  # The visible name to be used for this issue
+class FanacIssuePages(object):
+    _Path: str=None             # The path relative to public of the issue
+    _FirstPageName: str=None    # The name of the first page of the issue
+    _PageList: list=None        # List of tuples (strings making up the page numbers, page file name)  E.g., (5, fanz017-05.html)
+    _DisplayName: str=None      # The visible name to be used for this issue
 
-    def __init__(self, Pathname=None, Issuelist=None, Str=None):
-        if Str == None:
-            self._Pathname=Pathname
-            self._PageList=Issuelist
-        else:
-            self.Append(Str)
+    def __init__(self, Path=None, FirstPageName=None, PageList=None, DisplayName=None, PageName=None):
+        if self._Path is None:
+            self._Path=Path
+        if self._FirstPageName is None:
+            self._FirstPageName=FirstPageName
+        if self._PageList is None:
+            self._PageList=PageList
+        if self._DisplayName is None:
+            self._DisplayName=DisplayName
 
-    def __lt__(self, second):
-        if isinstance(second, FanacIssue):
-            return self._Pathname < second._Pathname
-        return self._Pathname < second
+        if PageName is not None:
+            self.InitFromString(PageName)
+
+    # def __lt__(self, second):
+    #     if isinstance(second, FanacIssuePages):
+    #         return self._Path < second._Path
+    #     return self._Pathn < second
 
     def InitFromString(self, s: str):
-        name, page=IsFanacIssuePage(s)
-        if name is None:
-            name=s
-        self._Pathname=name
-        self._PageList=[page]
+        path, pagename=IsFanacIssuePage(s)
+        if path is None:
+            pagename=s
+        if path is not None:
+            self._Path=path
+        self._PageList=[("-1", pagename)]
 
     @property
     def PageList(self):
         return self._PageList
 
     @property
-    def Pathname(self):
-        return self._Pathname
+    def Path(self):
+        return self._Path
 
     @property
     def SortName(self):
-        if self._Pathname is not None:
-            return self._Pathname
-        return " "
+        p=""
+        f=""
+        if self._Path is not None:
+            p=self._Path
+        if self._FirstPageName is not None:
+            f=self._FirstPageName
+
+        return p+"/"+f
 
 
     #******************************
@@ -51,17 +64,17 @@ class FanacIssue(object):
         name, page=IsFanacIssuePage(s)
 
         # Is this a new, empty instance?
-        if self._Pathname == None and self._PageList == None:
-            self._Pathname=name
+        if self._Path == None and self._PageList == None:
+            self._Path=name
             if page is not None:
                 self._PageList=[page]
             return True
 
         # OK, we're (maybe) appending to an existing instance
         if page is None:
-            self._Pathname=s
+            self._Path=s
             return False
-        if name != self._Pathname:
+        if name != self._Path:
             return False
         self._PageList.append(page)
 
@@ -69,7 +82,7 @@ class FanacIssue(object):
     #******************************
     # Format the FI for printing
     def Format(self, Displayname=None):
-        issueName=self._Pathname
+        issueName=self._Path
         if Displayname is not None:
             issueName=Displayname
         if issueName is None or len(issueName) == 0:  # This is likely an error
@@ -78,7 +91,7 @@ class FanacIssue(object):
         if self._PageList == None or len(self._PageList) == 0:    # There's a filename, but no page number
             return issueName
         self.DeDup()
-        pages=[p.lstrip("0") for p in self._PageList]
+        pages=[p[0].lstrip("0") for p in self._PageList]
         pages=[p if p != "" else "0" for p in pages]
         if len(pages) > 1:
             return issueName+" pp "+",".join(pages)
@@ -95,11 +108,11 @@ class FanacIssue(object):
     #   <path><name>--##.html (##,$$)
     # This does not modify either page reference, but returns a new one representing both
     def Merge(self, other):
-        if self._Pathname != other._Pathname:
+        if self._Path != other._Path:
             return False
 
         if other._PageList is None:
-            return True
+            return True     # Nothing to merge, so it's done
 
         if self._PageList is None:
             self._PageList=other._PageList
@@ -127,7 +140,7 @@ class FanacIssue(object):
     # Sort a pagelist
     def SortPagelist(self):
         if self._PageList is not None:
-            self._PageList.sort(key=lambda n: numsSortKey(n))
+            self._PageList.sort(key=lambda n: numsSortKey(n[0]))
 
 
 #******************************************************************

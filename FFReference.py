@@ -3,8 +3,8 @@ import Helpers
 import os
 import os.path
 from dataclasses import dataclass, field
-import FanacIssue
-from FanacIssue import FanacIssue
+import FanacIssuePages
+from FanacIssuePages import FanacIssuePages
 
 
 @dataclass(order=False)
@@ -12,7 +12,7 @@ class FFReference(object):
     CanonName: str     # The Wikidot canonical name
     Name: str          # The display name
     _FancyRefs: list    # A list of strings: canonical names of referring pages from Fancy
-    _FanacRefs: list    # A list of FanacIssue objects
+    _FanacRefs: list    # A list of FanacIssuePages objects
 
     def __init__(self, CanonName=None, Name=None, FanacStr=None):
         self.Name=Name
@@ -29,7 +29,7 @@ class FFReference(object):
                 self.CanonName=Helpers.CanonicizeString(Name)
 
         if FanacStr is not None:
-            fi=FanacIssue()
+            fi=FanacIssuePages()
             fi.InitFromString(FanacStr)
             self._FanacRefs=[fi]
 
@@ -77,21 +77,18 @@ class FFReference(object):
 
     #**********************
     # Append a Fanac reference.  This may be just a string or this may be convertible to a FanacIssue
-    def AppendFanacRef(self, value):
+    def AppendFanacRef(self, fip: FanacIssuePages):
         if self._FanacRefs is None or len(self._FanacRefs) == 0:
-            fi=FanacIssue()
-            fi.InitFromString(value)
-            self._FanacRefs=[fi]
+            self._FanacRefs=[fip]
             return
 
-        # Can this me merged with the last FanacIssue?
-        lastFI=self._FanacRefs[-1:][0]
-        if lastFI.Append(value):
+        # Can this be merged with the last FanacIssue?
+        lastFIP=self._FanacRefs[-1:][0]
+        if lastFIP.Merge(fip):
             return
 
         # Nope. Just append it to the list
-        fi=FanacIssue(Str=value)
-        self._FanacRefs.append(fi)
+        self._FanacRefs.append(fip)
 
 
     #**********************
