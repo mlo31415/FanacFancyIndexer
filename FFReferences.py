@@ -8,20 +8,19 @@ from FanacIssuePages import FanacIssuePages
 
 
 @dataclass(order=False)
-class FFReference(object):
+class FFReferences(object):
+    Redirect: str       # This is a redirect to another FFReferce. The string is that FFR's name
     CanonName: str     # The Wikidot canonical name
     Name: str          # The display name
     _FancyRefs: list    # A list of strings: canonical names of referring pages from Fancy
     _FanacRefs: list    # A list of FanacIssuePages objects
 
-    def __init__(self, CanonName=None, Name=None, FanacStr=None):
+    def __init__(self, Redirect=None, CanonName=None, Name=None, FanacStr=None):
+        self.Redirect=Redirect
+        self.CanonName=CanonName
         self.Name=Name
-        self.CanonName=None
         self._FancyRefs=None
         self._FanacRefs=None
-
-        if CanonName is not None:
-            self.CanonName=CanonName
 
         if Name is not None:
             self.Name=Name
@@ -94,6 +93,8 @@ class FFReference(object):
     #**********************
     # Add two FFRs together
     def __add__(self, other):
+        assert self.CanonName is None   # What does it mean to add a redirect?
+
         if self.Name is None:
             self.Name=other.Name
             self.CanonName=other.CanonName

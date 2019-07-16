@@ -1,6 +1,6 @@
 import os
 import os.path
-import FFReference
+import FFReferences
 import FanacInformation
 import FanacIssuePages
 import Helpers
@@ -38,19 +38,21 @@ with open(os.path.join(fanacDataPath, "Fanac name references.txt"), "r") as f:
 
 # Create a dictionary of names with the value being a FFReference (a class which holds all fanac and fancy references for a given name
 for line in fanacReferencesText:
+    line=line.strip()
     if len(line) == 0 or line[0] == "#":    # Skip comment and empty lines
         continue
+    # <person's name> | <file name> | <path relative to public> | <prefix> | <issue no> | <page no>
     parts=line.split("|")
-    parts=[p.strip() for p in parts]    # Split into <person's name> | <file name> | <path relative to public>
+    parts=[p.strip() for p in parts]    # Split into <person's name> | <file name> | <path relative to public> | <prefix> | <issue no> | <page no>
 
     # Get the existing FFReference for this name.  If there is none, add an empty one.
-    try:
-        ref=references[parts[0]]
-    except:
-        references[parts[0]]=FFReference.FFReference(Name=parts[0])
+
+    if parts[0] not in references:
+        references[parts[0]]=FFReferences.FFReferences(Name=parts[0])
 
     # Add this fanac reference to the list of fanac references maintained by FFReference
-    fi=FanacIssuePages.FanacIssuePages(PageName=parts[1], Path=parts[2])
+    fi=FanacIssuePages.FanacIssuePages(PageName=parts[1], Path=parts[2], DisplayName=(parts[3]+" "+parts[4].strip()))
+
     references[parts[0]].AppendFanacRef(fi)
 
 print("Fanac yielded "+str(len(references))+" distinct names")
@@ -71,7 +73,7 @@ for line in fancyReferencesText:
             ffr=references[name]
             count+=1
         else:
-            ffr=FFReference.FFReference(Name=name)
+            ffr=FFReferences.FFReferences(Name=name)
             references[name]=ffr
         continue
     ffr.AppendFancyRef(line.strip())
@@ -236,7 +238,7 @@ with open("References.txt", "w+") as f:
         if ref.NumFanacRefs > 0:
             Helpers.splitOutput(f, ref.FanacRefsString)
 
-def writeutf8(f, s: str):
+def writeUTFf8(f, s: str):
     f.write(s.encode("utf-8"))
 
 # Write out the index HTML files
@@ -249,16 +251,16 @@ with open("References.html", "wb+") as f:
     for key in sortedReferenceKeys:
         ref=references[key]
         # First come the Fancyclopedia references
-        writeutf8(f, '<font size="5"><a href=http://fancyclopedia.org/'+ref.CanonName+">"+ref.Name+"</a></font>\n")
+        writeUTFf8(f, '<font size="5"><a href=http://fancyclopedia.org/'+ref.CanonName+">"+ref.Name+"</a></font>\n")
         if ref.NumFancyRefs > 0:
-            writeutf8(f, r'<table border="0" width="100%" cellspacing="0"> <tr> <td width="3%">&nbsp;</td><td>')
-            writeutf8(f, r'<p class="small">Fancyclopedia: ')
+            writeUTFf8(f, r'<table border="0" width="100%" cellspacing="0"> <tr> <td width="3%">&nbsp;</td><td>')
+            writeUTFf8(f, r'<p class="small">Fancyclopedia: ')
             joiner=""
             for fr in ref.FancyRefs:
                 fullname=fr
                 if fr in canonNameToFull.keys():
                     fullname=canonNameToFull[fr]
-                writeutf8(f, joiner+'<font size="4"><a href=http://fancyclopedia.org/'+fr+'>['+fullname+']</a></font>')
+                writeUTFf8(f, joiner+'<font size="4"><a href=http://fancyclopedia.org/'+fr+'>['+fullname+']</a></font>')
                 joiner=", "
             f.write("</p></td></tr></table>".encode('utf-8'))
         # Next the Fanac references sorted by type
@@ -271,16 +273,18 @@ with open("References.html", "wb+") as f:
                         counts[type]=0
                     counts[type]+=1
             for countType in counts.keys():
-                writeutf8(f, r'<table border="0" width="100%" cellspacing="0"> <tr> <td width="3%">&nbsp;</td><td>')
-                writeutf8(f, r'<p Class="small">'+countType+r': ')
+                writeUTFf8(f, r'<table border="0" width="100%" cellspacing="0"> <tr> <td width="3%">&nbsp;</td><td>')
+                writeUTFf8(f, r'<p Class="small">'+countType+r': ')
                 joiner=""
                 for fi in ref.FanacRefs:
-                    displayname=FanacInformation.findFanacInformation(fanacInformation, fi.Path).Displayname
+                    displayname=ref.Name
+                    if (displayname is None or len(displayname) == 0):
+                        displayname=FanacInformation.findFanacInformation(fanacInformation, fi.Path).Displayname
                     if fi.PageList is not None:
                         if countType == Helpers.fanacCategory(fi.Path):
-                            writeutf8(f, joiner+fi.Format(displayname))
+                            writeUTFf8(f, joiner+'<font size="4"><a href=http://fancyclopedia.org/'+fr+'>['+displayname+']</a></font>')
                         joiner=", "
-                writeutf8(f, "</p></td></tr>")
-        writeutf8(f, "</table>")
-    writeutf8(f, footer)
+                writeUTFf8(f, "</p></td></tr>")
+        writeUTFf8(f, "</table>")
+    writeUTFf8(f, footer)
     f.close()
