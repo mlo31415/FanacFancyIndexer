@@ -36,7 +36,7 @@ class FanacIssuePages(object):
             pagename=s
         if path is not None:
             self._Path=path
-        self._PageList=[("-1", pagename)]
+        self._PageList=[("", pagename)]
 
     @property
     def PageList(self):
@@ -159,6 +159,7 @@ def jacksNumbers(s: str):
     if s == "r3": return -6
     if s == "r4": return -5
     if s == "r5": return -4
+    if s == "": return 0
     if s == "i1": return 601
     if s == "i2": return 602
     if s == "i3": return 603
