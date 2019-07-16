@@ -77,14 +77,15 @@ class FFReferences(object):
     #**********************
     # Append a Fanac reference.  This may be just a string or this may be convertible to a FanacIssue
     def AppendFanacRef(self, fip: FanacIssuePages):
+        # is this an empty list?
         if self._FanacRefs is None or len(self._FanacRefs) == 0:
             self._FanacRefs=[fip]
             return
 
-        # Can this be merged with the last FanacIssue?
-        lastFIP=self._FanacRefs[-1:][0]
-        if lastFIP.Merge(fip):
-            return
+        # Can this be merged with an existing FanacIssuePages?
+        for f in self._FanacRefs:
+            if f.Merge(fip):
+                return
 
         # Nope. Just append it to the list
         self._FanacRefs.append(fip)
