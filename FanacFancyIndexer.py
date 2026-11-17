@@ -227,7 +227,7 @@ def sortkeyForNames(name):
 # Create a list of references keys in alpha order by name
 sortedReferenceKeys=list(references.keys())
 sortedReferenceKeys.sort(key=lambda x: sortkeyForNames(x))
-with open("References.txt", "w+") as f:
+with open("References.txt", "w+", encoding="utf-8") as f:
     for key in sortedReferenceKeys:
         f.write(key+"\n")
         ref=references[key]
